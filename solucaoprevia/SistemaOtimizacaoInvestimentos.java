@@ -1,6 +1,8 @@
-package solucaoprevia;
-
 import java.util.*;
+
+interface OtimizadorInvestimentos {
+    Carteira otimizar(PerfilInvestidor perfilInvestidor, List<Investimento> listaInvestimentos);
+}
 
 class Investimento {
     private String nome;
@@ -80,22 +82,10 @@ class Carteira {
     }
 }
 
-class AStar {
-    private PerfilInvestidor perfilInvestidor;
-    private List<Investimento> listaInvestimentos;
+class AStar implements OtimizadorInvestimentos {
 
-    public AStar(PerfilInvestidor perfilInvestidor, List<Investimento> listaInvestimentos) {
-        this.perfilInvestidor = perfilInvestidor;
-        this.listaInvestimentos = listaInvestimentos;
-    }
-
-
-    private double heuristica(Carteira carteira) {
-
-        return -(carteira.getRetornoTotal() - carteira.getRiscoTotal());
-    }
-
-    public Carteira otimizar() {
+    @Override
+    public Carteira otimizar(PerfilInvestidor perfilInvestidor, List<Investimento> listaInvestimentos) {
         PriorityQueue<Carteira> openList = new PriorityQueue<>(Comparator.comparingDouble(this::heuristica));
         Set<Carteira> closedList = new HashSet<>();
         Carteira initialCarteira = new Carteira();
@@ -106,9 +96,7 @@ class AStar {
         while (!openList.isEmpty()) {
             Carteira currentCarteira = openList.poll();
 
-
             if (currentCarteira.atendeAoPerfil(perfilInvestidor)) {
-
                 if (melhorCarteira == null || currentCarteira.getRetornoTotal() > melhorCarteira.getRetornoTotal()) {
                     melhorCarteira = currentCarteira;
                 }
@@ -116,13 +104,11 @@ class AStar {
 
             closedList.add(currentCarteira);
 
-
             for (Investimento investimento : listaInvestimentos) {
                 if (!currentCarteira.getInvestimentos().contains(investimento)) {
                     Carteira newCarteira = new Carteira();
                     newCarteira.getInvestimentos().addAll(currentCarteira.getInvestimentos());
                     newCarteira.adicionarInvestimento(investimento);
-
 
                     if (!closedList.contains(newCarteira) && newCarteira.getRiscoTotal() <= perfilInvestidor.getNivelDeRisco()) {
                         openList.add(newCarteira);
@@ -133,17 +119,17 @@ class AStar {
 
         return melhorCarteira;
     }
+
+    private double heuristica(Carteira carteira) {
+        return -(carteira.getRetornoTotal() - carteira.getRiscoTotal());
+    }
 }
 
 public class SistemaOtimizacaoInvestimentos {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-
         List<Investimento> investimentos = new ArrayList<>();
-        investimentos.add(new Investimento("acao1", 0.08, 0.15));
-        investimentos.add(new Investimento("acao2", 0.10, 0.20));
-        investimentos.add(new Investimento("acao3", 0.12, 0.25));
         investimentos.add(new Investimento("Fundo Imobiliário X", 0.06, 0.10));
         investimentos.add(new Investimento("Fundo Imobiliário Y", 0.07, 0.12));
         investimentos.add(new Investimento("Tesouro Direto", 0.05, 0.03));
@@ -151,26 +137,21 @@ public class SistemaOtimizacaoInvestimentos {
         investimentos.add(new Investimento("Bitcoin", 0.20, 0.50));
         investimentos.add(new Investimento("CDB", 0.04, 0.02));
 
-
         List<PerfilInvestidor> perfis = new ArrayList<>();
         perfis.add(new PerfilInvestidor("Conservador", 0.2));
         perfis.add(new PerfilInvestidor("Moderado", 0.4));
         perfis.add(new PerfilInvestidor("Agressivo", 0.6));
 
-
         System.out.println("Escolha um perfil para otimizar a carteira:");
         for (int i = 0; i < perfis.size(); i++) {
             System.out.println((i + 1) + ". " + perfis.get(i).getNome() + " - Risco Máximo: " + (perfis.get(i).getNivelDeRisco() * 100) + "%");
         }
-
         System.out.print("Digite o número do perfil escolhido: ");
         int perfilEscolhido = scanner.nextInt();
         PerfilInvestidor perfilSelecionado = perfis.get(perfilEscolhido - 1);
 
-
-        AStar aStar = new AStar(perfilSelecionado, investimentos);
-        Carteira melhorCarteira = aStar.otimizar();
-
+        OtimizadorInvestimentos otimizador = new AStar();
+        Carteira melhorCarteira = otimizador.otimizar(perfilSelecionado, investimentos);
 
         System.out.println("\nCarteira otimizada para " + perfilSelecionado.getNome() + ":");
         if (melhorCarteira != null) {
