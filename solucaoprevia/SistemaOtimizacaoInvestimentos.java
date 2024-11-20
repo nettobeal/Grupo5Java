@@ -1,131 +1,11 @@
-import java.util.*;
+package solucaoprevia;
 
-interface OtimizadorInvestimentos {
-    Carteira otimizar(PerfilInvestidor perfilInvestidor, List<Investimento> listaInvestimentos);
-}
-
-class Investimento {
-    private String nome;
-    private double retornoEsperado;
-    private double risco;
-
-    public Investimento(String nome, double retornoEsperado, double risco) {
-        this.nome = nome;
-        this.retornoEsperado = retornoEsperado;
-        this.risco = risco;
-    }
-
-    public double getRetornoEsperado() {
-        return retornoEsperado;
-    }
-
-    public double getRisco() {
-        return risco;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-}
-
-class PerfilInvestidor {
-    private String nome;
-    private double nivelDeRisco;
-
-    public PerfilInvestidor(String nome, double nivelDeRisco) {
-        this.nome = nome;
-        this.nivelDeRisco = nivelDeRisco;
-    }
-
-    public double getNivelDeRisco() {
-        return nivelDeRisco;
-    }
-
-    public String getNome() {
-        return nome;
-    }
-}
-
-class Carteira {
-    private List<Investimento> investimentos = new ArrayList<>();
-    private double riscoTotal;
-    private double retornoTotal;
-
-    public void adicionarInvestimento(Investimento investimento) {
-        investimentos.add(investimento);
-        calcularTotais();
-    }
-
-    private void calcularTotais() {
-        riscoTotal = 0;
-        retornoTotal = 0;
-        for (Investimento investimento : investimentos) {
-            riscoTotal += investimento.getRisco();
-            retornoTotal += investimento.getRetornoEsperado();
-        }
-    }
-
-    public double getRiscoTotal() {
-        return riscoTotal;
-    }
-
-    public double getRetornoTotal() {
-        return retornoTotal;
-    }
-
-    public List<Investimento> getInvestimentos() {
-        return investimentos;
-    }
-
-    public boolean atendeAoPerfil(PerfilInvestidor perfilInvestidor) {
-        return this.riscoTotal <= perfilInvestidor.getNivelDeRisco();
-    }
-}
-
-class AStar implements OtimizadorInvestimentos {
-
-    @Override
-    public Carteira otimizar(PerfilInvestidor perfilInvestidor, List<Investimento> listaInvestimentos) {
-        PriorityQueue<Carteira> openList = new PriorityQueue<>(Comparator.comparingDouble(this::heuristica));
-        Set<Carteira> closedList = new HashSet<>();
-        Carteira initialCarteira = new Carteira();
-        openList.add(initialCarteira);
-
-        Carteira melhorCarteira = null;
-
-        while (!openList.isEmpty()) {
-            Carteira currentCarteira = openList.poll();
-
-            if (currentCarteira.atendeAoPerfil(perfilInvestidor)) {
-                if (melhorCarteira == null || currentCarteira.getRetornoTotal() > melhorCarteira.getRetornoTotal()) {
-                    melhorCarteira = currentCarteira;
-                }
-            }
-
-            closedList.add(currentCarteira);
-
-            for (Investimento investimento : listaInvestimentos) {
-                if (!currentCarteira.getInvestimentos().contains(investimento)) {
-                    Carteira newCarteira = new Carteira();
-                    newCarteira.getInvestimentos().addAll(currentCarteira.getInvestimentos());
-                    newCarteira.adicionarInvestimento(investimento);
-
-                    if (!closedList.contains(newCarteira) && newCarteira.getRiscoTotal() <= perfilInvestidor.getNivelDeRisco()) {
-                        openList.add(newCarteira);
-                    }
-                }
-            }
-        }
-
-        return melhorCarteira;
-    }
-
-    private double heuristica(Carteira carteira) {
-        return -(carteira.getRetornoTotal() - carteira.getRiscoTotal());
-    }
-}
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 
 public class SistemaOtimizacaoInvestimentos {
+
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -167,3 +47,4 @@ public class SistemaOtimizacaoInvestimentos {
         scanner.close();
     }
 }
+
